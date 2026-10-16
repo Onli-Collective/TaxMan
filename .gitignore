@@ -1,0 +1,5 @@
+/target
+
+# Storing environment variables here!
+.env.local
+.vscode/settings.json

@@ -1,0 +1,5 @@
+[workspace]
+resolver = "3"
+members = ["crates/macros", "crates/taxman"]
+package.edition = "2024"
+package.version = "0.1.0"
