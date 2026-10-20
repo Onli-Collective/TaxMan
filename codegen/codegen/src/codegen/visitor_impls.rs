@@ -2,7 +2,7 @@ use std::{future::ready, rc::Rc};
 
 use openapi::{Either, indexmap::IndexMap, serde::de::DeserializeOwned, serde_json};
 
-use crate::cache::{Cache, CacheError, Visitor};
+use crate::codegen::cache::{Cache, CacheError, Visitor};
 
 impl<'a, T> Visitor<&'a mut openapi::ReferenceOr<T>> for Cache
 where

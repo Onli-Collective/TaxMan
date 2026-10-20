@@ -3,7 +3,7 @@ use std::{any::Any, collections::HashMap, ops::Deref, rc::Rc};
 use openapi::{json_pointer, serde::de::DeserializeOwned, serde_json, serde_yaml};
 use thiserror::Error;
 
-use crate::patch;
+use crate::codegen::patch;
 
 pub struct Cache {
     root_url: reqwest::Url,

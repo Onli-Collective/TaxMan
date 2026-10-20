@@ -1,0 +1,11 @@
+[package]
+name = "hmrc-business-details"
+description = "Business Details (MTD)"
+version = "2.0.0"
+edition.workspace = true
+
+[dependencies]
+hmrc = { path = "../common", package = "hmrc-common" }
+
+[package.metadata.codegen]
+url = "https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/business-details-api/2.0/oas/file"

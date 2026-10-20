@@ -2,20 +2,21 @@ pub(crate) mod cache;
 pub(crate) mod patch;
 pub(crate) mod visitor_impls;
 
-#[cfg(test)]
+#[cfg(all(test, feature = "codegen"))]
 mod tests {
     use openapi::serde_yaml;
 
-    use crate::cache::{Cache, Visitor};
+    use crate::codegen::cache::{Cache, Visitor};
 
     #[tokio::test]
-    async fn test_a() -> Result<(), Box<dyn std::error::Error>> {
-        let url = "https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/business-details-api/2.0/oas/file";
+    async fn business_details() -> Result<(), Box<dyn std::error::Error>> {
+        let url = std::env::var("API_URL").ok()
+            .unwrap_or("https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/business-details-api/2.0/oas/file".to_string());
 
-        let contents = reqwest::get(url).await?.text().await?;
+        let contents = reqwest::get(&url).await?.text().await?;
         let mut api: openapi::OpenApi = openapi::serde_yaml::from_str(&contents)?;
 
-        let mut cache = Cache::new(url)?;
+        let mut cache = Cache::new(&url)?;
         cache.visit(&mut api).await?;
 
         for operation in api.paths.paths.values_mut().flat_map(

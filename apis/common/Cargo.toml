@@ -1,0 +1,6 @@
+[package]
+name = "hmrc-common"
+description = "Type-safe bindings to HMRC Making Tax Digital APIs"
+version = "0.1.0"
+
+[dependencies]

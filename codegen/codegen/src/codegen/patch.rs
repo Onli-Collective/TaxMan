@@ -2,7 +2,7 @@
 
 use openapi::{serde::de::DeserializeOwned, serde_json};
 
-use crate::cache::{Cache, CacheError};
+use crate::codegen::cache::{Cache, CacheError};
 
 pub(crate) async fn patch<T>(
     cache: &mut Cache,

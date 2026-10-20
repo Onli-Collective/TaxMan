@@ -1,0 +1,9 @@
+[package]
+name = "macros"
+edition.workspace = true
+version.workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
