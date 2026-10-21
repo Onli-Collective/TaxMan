@@ -1,3 +1,5 @@
+#![expect(unused)]
+
 use std::{any::Any, collections::HashMap, ops::Deref, rc::Rc};
 
 use openapi::{json_pointer, serde::de::DeserializeOwned, serde_json, serde_yaml};
