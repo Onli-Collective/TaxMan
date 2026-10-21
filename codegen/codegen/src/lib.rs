@@ -1,6 +1,8 @@
+#[doc(hidden)]
+#[cfg(feature = "macros")]
+pub mod __;
 #[cfg(feature = "codegen")]
 pub mod codegen;
+
 #[cfg(feature = "macros")]
-pub mod macros;
-#[cfg(feature = "macros")]
-pub use macros::*;
+pub use taxman_macros::*;

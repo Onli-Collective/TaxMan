@@ -6,6 +6,7 @@ edition.workspace = true
 
 [dependencies]
 hmrc = { path = "../common", package = "hmrc-common" }
+taxman = { path = "../../codegen/codegen" }
 
 [package.metadata.codegen]
 url = "https://developer.service.hmrc.gov.uk/api-documentation/docs/api/service/business-details-api/2.0/oas/file"

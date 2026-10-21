@@ -1,5 +1,5 @@
 [package]
-name = "taxman-codegen"
+name = "taxman"
 version.workspace = true
 edition.workspace = true
 
@@ -13,10 +13,11 @@ codegen = [
     "dep:thiserror",
     "dep:tokio",
 ]
-macros = []
+macros = ["dep:taxman-macros"]
 default = ["macros"]
 
 [dependencies]
+taxman-macros = { path = "../macros", optional = true }
 proc-macro2 = { version = "1.0.107", optional = true }
 quote = { version = "1.0.47", optional = true }
 reqwest = { version = "0.13.4", features = ["blocking"], optional = true }

@@ -11,7 +11,7 @@
 - [ ] Perhaps move in the openapi crate?
 - [ ] Move the fraud prevention headers into the common crate.
 - [ ] Investigate adding a Cargo pre-build hook to run the codegen.
-- [ ] This crate parses the OpenAPI specifications for HMRC's APIs and generates corresponding
+- [.] This crate parses the OpenAPI specifications for HMRC's APIs and generates corresponding
 types and functions to API schemas and endpoints.
 
 - [ ] A CI pipeline triggers on a new commit to the official [HMRC changlelog repo](https://github.com/hmrc/income-tax-mtd-changelog), which will regenerate the code for the APIs, and file a
