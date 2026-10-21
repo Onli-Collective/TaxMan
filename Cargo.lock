@@ -761,6 +761,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 [[package]]
 name = "openapi"
 version = "3.0.3"
+source = "git+https://github.com/Onli-Collective/OpenAPI.git#b2cc3db8dccb476af37c7d255b1d142bb9e0d984"
 dependencies = [
  "indexmap",
  "mail-parser",
