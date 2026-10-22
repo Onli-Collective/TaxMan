@@ -17,7 +17,7 @@ mod tests {
         let mut api: openapi::OpenApi = openapi::serde_yaml::from_str(&contents)?;
 
         let mut cache = Cache::new(&url)?;
-        cache.visit(&mut api).await?;
+        Visitor::<&mut openapi::OpenApi>::visit(&mut cache, &mut api).await?;
 
         for operation in api.paths.paths.values_mut().flat_map(
             |openapi::PathItem {
@@ -41,7 +41,7 @@ mod tests {
                     .chain(trace)
             },
         ) {
-            cache.visit(&mut *operation).await?;
+            Visitor::<&mut openapi::Operation>::visit(&mut cache, &mut *operation).await?;
         }
 
         println!("{}", serde_yaml::to_string(&api).unwrap());
