@@ -1,8 +1,6 @@
 [advisories]
-vulnerability = "deny"
-unmaintained = "deny"
+# Deprecated keys for some reason: `vulnerability`, `unmaintained`, `yanked`. They are all default ` = deny`.
 yanked = "deny"
-notice = "deny"
 ignore = []
 
 [bans]
@@ -14,7 +12,5 @@ unknown-git = "deny"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 
 [licenses]
-unlicensed = "deny"
-copyleft = "deny"
-default = "deny"
-allow = ["MIT", "Apache-2.0"]
+# `unlicensed`, `copyleft`, `default` are also deprecated. Every non-`allow`-ed licence is denied.
+allow = ["MIT", "Apache-2.0", "Unicode-3.0"]
