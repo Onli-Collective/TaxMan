@@ -1,0 +1,30 @@
+# Check https://github.com/EmbarkStudios/cargo-deny/pull/611 for defaults
+# Lots
+[advisories]
+# Deprecated keys for some reason: `vulnerability`, `unmaintained`, `yanked`. They are all default ` = deny`.
+yanked = "deny"
+ignore = []
+
+[bans]
+multiple-versions = "deny"
+skip = [
+    { crate = "syn@2", reason = "the ecosystem is in the process of migrating to syn 3" },
+    { crate = "core-foundation@0.9", reason = "hyper-rustls and rustls-platform-verifier disagree which version to use (both transitive deps of reqwest)." },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = ["https://github.com/Onli-Collective/OpenAPI.git"]
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+[licenses]
+# `unlicensed`, `copyleft`, `default` are also deprecated. Every non-`allow`-ed licence is denied.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Unicode-3.0",
+    "ISC",
+    "BSD-3-Clause",
+    "CDLA-Permissive-2.0",
+]

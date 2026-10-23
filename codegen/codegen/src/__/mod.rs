@@ -17,7 +17,7 @@ pub fn rename(p: predicate, new_name: identifier) -> __ {
 }
 
 pub mod predicates {
-    use super::{__, predicate, etc};
+    use super::{__, etc, predicate};
 
     /// All the predicates must be true.
     pub fn all(p1: predicate, p2: predicate, etc: etc) -> predicate {

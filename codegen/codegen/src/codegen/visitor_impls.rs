@@ -17,8 +17,12 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             let value = match target {
-                openapi::ReferenceOr::Reference(reference) => self.fetch(reference).await?,
-                openapi::ReferenceOr::Inline(o) => return self.visit(o).await.map(|_| ()),
+                openapi::ReferenceOr::Reference(reference) => {
+                    self.fetch::<T, String>(reference).await?
+                }
+                openapi::ReferenceOr::Inline(o) => {
+                    return <Self as Visitor<&mut T>>::visit(self, o).await.map(|_| ());
+                }
             };
 
             *target = openapi::ReferenceOr::Inline(value.as_ref().clone());
@@ -40,8 +44,8 @@ impl<'a> Visitor<&'a mut openapi::OpenApi> for Cache {
                 paths, components, ..
             } = target;
 
-            self.visit(paths).await?;
-            self.visit(components).await?;
+            Visitor::<&mut openapi::Paths>::visit(self, paths).await?;
+            Visitor::<&mut Option<openapi::Components>>::visit(self, components).await?;
 
             Ok(&*target)
         }
@@ -69,15 +73,54 @@ impl<'a> Visitor<&'a mut openapi::Components> for Cache {
                 ..
             } = target;
 
-            self.visit(schemas).await?;
-            self.visit(responses).await?;
-            self.visit(parameters).await?;
-            self.visit(examples).await?;
-            self.visit(request_bodies).await?;
-            self.visit(headers).await?;
-            self.visit(security_schemes).await?;
-            self.visit(links).await?;
-            self.visit(callbacks).await?;
+            Visitor::<
+                &mut Option<IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Schema>>>,
+            >::visit(self, schemas)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Response>>,
+                >,
+            >::visit(self, responses)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Parameter>>,
+                >,
+            >::visit(self, parameters)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Example>>,
+                >,
+            >::visit(self, examples)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::RequestBody>>,
+                >,
+            >::visit(self, request_bodies)
+            .await?;
+            Visitor::<
+                &mut Option<IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Header>>>,
+            >::visit(self, headers)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::SecurityScheme>>,
+                >,
+            >::visit(self, security_schemes)
+            .await?;
+            Visitor::<
+                &mut Option<IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Link>>>,
+            >::visit(self, links)
+            .await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<openapi::ComponentKey, openapi::ReferenceOr<openapi::Callback>>,
+                >,
+            >::visit(self, callbacks)
+            .await?;
 
             Ok(())
         }
@@ -104,7 +147,7 @@ impl<'a> Visitor<&'a mut openapi::Paths> for Cache {
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             for path in target.paths.values_mut() {
-                self.visit(path).await?;
+                Visitor::<&mut openapi::PathItem>::visit(self, path).await?;
             }
 
             Ok(&*target)
@@ -118,7 +161,7 @@ impl<'a> Visitor<&'a mut openapi::PathItem> for Cache {
         &mut self,
         target: &'a mut openapi::PathItem,
     ) -> impl IntoFuture<Output = Result<Self::Value, CacheError>> {
-        Box::pin(async {
+        Box::pin(async move {
             if let openapi::PathItem {
                 ref_: Some(ref_),
                 summary,
@@ -136,8 +179,9 @@ impl<'a> Visitor<&'a mut openapi::PathItem> for Cache {
                 extensions,
             } = target
             {
-                let value: Rc<openapi::PathItem> =
-                    self.fetch(&openapi::Reference::new(ref_.as_str())).await?;
+                let value: Rc<openapi::PathItem> = self
+                    .fetch::<openapi::PathItem, &str>(&openapi::Reference::new(ref_.as_str()))
+                    .await?;
 
                 let openapi::PathItem {
                     summary: new_summary,
@@ -188,7 +232,7 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             for item in target.iter_mut() {
-                self.visit(item).await?;
+                Visitor::<&mut T>::visit(self, item).await?;
             }
 
             Ok(())
@@ -208,7 +252,7 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             for item in target.iter_mut() {
-                self.visit(item).await?;
+                Visitor::<&mut T>::visit(self, item).await?;
             }
 
             Ok(())
@@ -228,7 +272,7 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         Box::pin(async {
             match target {
-                Some(target) => self.visit(target).await.map(Some),
+                Some(target) => Visitor::<&mut T>::visit(self, target).await.map(Some),
                 None => Ok(None),
             }
         })
@@ -244,7 +288,7 @@ where
         &mut self,
         target: &'a mut Box<T>,
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
-        async { self.visit(target).await }
+        async { Visitor::<&mut T>::visit(self, target).await }
     }
 }
 
@@ -261,8 +305,8 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             match target {
-                Either::Left(l) => Ok(Either::Left(self.visit(l).await?)),
-                Either::Right(r) => Ok(Either::Right(self.visit(r).await?)),
+                Either::Left(l) => Ok(Either::Left(Visitor::<&mut L>::visit(self, l).await?)),
+                Either::Right(r) => Ok(Either::Right(Visitor::<&mut R>::visit(self, r).await?)),
             }
         }
     }
@@ -280,7 +324,7 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             match target {
-                Some(target) => self.visit(target).await.map(Some),
+                Some(target) => Visitor::<&mut T>::visit(self, target).await.map(Some),
                 None => Ok(None),
             }
         }
@@ -299,7 +343,7 @@ where
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             for item in target.values_mut() {
-                self.visit(item).await?;
+                Visitor::<&mut T>::visit(self, item).await?;
             }
 
             Ok(())
@@ -323,10 +367,17 @@ impl<'a> Visitor<&'a mut openapi::Operation> for Cache {
                 ..
             } = target;
 
-            self.visit(parameters).await?;
-            self.visit(request_body).await?;
-            self.visit(responses).await?;
-            self.visit(callbacks).await?;
+            Visitor::<&mut Option<Vec<openapi::ReferenceOr<openapi::Parameter>>>>::visit(
+                self, parameters,
+            )
+            .await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<openapi::RequestBody>>>::visit(
+                self,
+                request_body,
+            )
+            .await?;
+            Visitor::<&mut openapi::Responses>::visit(self, responses).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Callback>>>>::visit(self, callbacks).await?;
 
             Ok(&*target)
         }
@@ -349,10 +400,12 @@ impl<'a> Visitor<&'a mut openapi::Parameter> for Cache {
                 ..
             } = target;
 
-            self.visit(schema).await?;
-            self.visit(example).await?;
-            self.visit(examples).await?;
-            self.visit(content).await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<openapi::Schema>>>::visit(self, schema)
+                .await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, example).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Example>>>>::visit(self, examples).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::MediaType>>>::visit(self, content)
+                .await?;
 
             Ok(())
         }
@@ -383,7 +436,7 @@ impl<'a> Visitor<&'a mut serde_json::Value> for Cache {
             };
 
             let ref_ = openapi::Reference::<serde_json::Value, _>::new(ref_.as_str());
-            let dict = self.fetch(&ref_).await?;
+            let dict = self.fetch::<serde_json::Value, &str>(&ref_).await?;
 
             *target = dict.as_ref().clone();
 
@@ -401,7 +454,7 @@ impl<'a> Visitor<&'a mut openapi::Example> for Cache {
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             let openapi::Example { value, .. } = target;
-            self.visit(value).await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, value).await?;
 
             Ok(())
         }
@@ -424,10 +477,12 @@ impl<'a> Visitor<&'a mut openapi::MediaType> for Cache {
                 ..
             } = target;
 
-            self.visit(schema).await?;
-            self.visit(example).await?;
-            self.visit(examples).await?;
-            self.visit(encoding).await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<openapi::Schema>>>::visit(self, schema)
+                .await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, example).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Example>>>>::visit(self, examples).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::Encoding>>>::visit(self, encoding)
+                .await?;
 
             Ok(())
         }
@@ -443,7 +498,10 @@ impl<'a> Visitor<&'a mut openapi::Encoding> for Cache {
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             let openapi::Encoding { headers, .. } = target;
-            self.visit(headers).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Header>>>>::visit(
+                self, headers,
+            )
+            .await?;
             Ok(())
         }
     }
@@ -465,10 +523,12 @@ impl<'a> Visitor<&'a mut openapi::Header> for Cache {
                 ..
             } = target;
 
-            self.visit(schema).await?;
-            self.visit(example).await?;
-            self.visit(examples).await?;
-            self.visit(content).await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<openapi::Schema>>>::visit(self, schema)
+                .await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, example).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Example>>>>::visit(self, examples).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::MediaType>>>::visit(self, content)
+                .await?;
 
             Ok(())
         }
@@ -496,15 +556,23 @@ impl<'a> Visitor<&'a mut openapi::Schema> for Cache {
                 ..
             } = target;
 
-            self.visit(all_of).await?;
-            self.visit(one_of).await?;
-            self.visit(any_of).await?;
-            self.visit(not).await?;
-            self.visit(items).await?;
-            self.visit(properties).await?;
-            self.visit(additional_properties).await?;
-            self.visit(default).await?;
-            self.visit(example).await?;
+            Visitor::<&mut Option<Vec<openapi::ReferenceOr<openapi::Schema>>>>::visit(self, all_of)
+                .await?;
+            Visitor::<&mut Option<Vec<openapi::ReferenceOr<openapi::Schema>>>>::visit(self, one_of)
+                .await?;
+            Visitor::<&mut Option<Vec<openapi::ReferenceOr<openapi::Schema>>>>::visit(self, any_of)
+                .await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<Box<openapi::Schema>>>>::visit(self, not)
+                .await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<Box<openapi::Schema>>>>::visit(self, items)
+                .await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Schema>>>>::visit(
+                self, properties,
+            )
+            .await?;
+            Visitor::<&mut openapi::Either<bool, openapi::ReferenceOr<Box<openapi::Schema>>>>::visit(self, additional_properties).await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, default).await?;
+            Visitor::<&mut Option<serde_json::Value>>::visit(self, example).await?;
 
             Ok(())
         })
@@ -520,7 +588,7 @@ impl<'a> Visitor<&'a mut openapi::RequestBody> for Cache {
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             let openapi::RequestBody { content, .. } = target;
-            self.visit(content).await?;
+            Visitor::<&mut IndexMap<String, openapi::MediaType>>::visit(self, content).await?;
             Ok(())
         }
     }
@@ -537,8 +605,12 @@ impl<'a> Visitor<&'a mut openapi::Responses> for Cache {
             let openapi::Responses {
                 default, responses, ..
             } = target;
-            self.visit(default).await?;
-            self.visit(responses).await?;
+            Visitor::<&mut Option<openapi::ReferenceOr<openapi::Response>>>::visit(self, default)
+                .await?;
+            Visitor::<
+                &mut IndexMap<openapi::HttpStatusCode, openapi::ReferenceOr<openapi::Response>>,
+            >::visit(self, responses)
+            .await?;
             Ok(())
         }
     }
@@ -559,9 +631,16 @@ impl<'a> Visitor<&'a mut openapi::Response> for Cache {
                 ..
             } = target;
 
-            self.visit(headers).await?;
-            self.visit(content).await?;
-            self.visit(links).await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Header>>>>::visit(
+                self, headers,
+            )
+            .await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::MediaType>>>::visit(self, content)
+                .await?;
+            Visitor::<&mut Option<IndexMap<String, openapi::ReferenceOr<openapi::Link>>>>::visit(
+                self, links,
+            )
+            .await?;
 
             Ok(())
         }
@@ -582,8 +661,17 @@ impl<'a> Visitor<&'a mut openapi::Link> for Cache {
                 ..
             } = target;
 
-            self.visit(parameters).await?;
-            self.visit(request_body).await?;
+            Visitor::<
+                &mut Option<
+                    IndexMap<String, openapi::Either<serde_json::Value, openapi::Expression>>,
+                >,
+            >::visit(self, parameters)
+            .await?;
+            Visitor::<&mut Option<openapi::Either<serde_json::Value, openapi::Expression>>>::visit(
+                self,
+                request_body,
+            )
+            .await?;
             Ok(())
         }
     }
@@ -609,7 +697,10 @@ impl<'a> Visitor<&'a mut openapi::Callback> for Cache {
     ) -> impl IntoFuture<Output = Result<Self::Value, Self::Error>> {
         async {
             let openapi::Callback { callbacks, .. } = target;
-            self.visit(callbacks).await?;
+            Visitor::<&mut IndexMap<openapi::Expression, openapi::PathItem>>::visit(
+                self, callbacks,
+            )
+            .await?;
             Ok(())
         }
     }

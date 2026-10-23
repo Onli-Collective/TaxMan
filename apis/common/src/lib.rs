@@ -46,16 +46,16 @@ pub struct Error<Code> {
 }
 
 pub fn do_operation<O: Operation>(
-    params: O::Params,
-    body: O::Body,
+    _params: O::Params,
+    _body: O::Body,
 ) -> Result<O::Ok, Error<O::Err>> {
     todo!()
 }
 
 pub fn do_operation_test<O: Operation>(
-    params: O::Params,
-    scenario: O::Scenario,
-    body: O::Body,
+    _params: O::Params,
+    _scenario: O::Scenario,
+    _body: O::Body,
 ) -> Result<O::Ok, Error<O::Err>> {
     todo!()
 }

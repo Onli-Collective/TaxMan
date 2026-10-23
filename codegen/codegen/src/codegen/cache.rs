@@ -146,7 +146,8 @@ impl Cache {
         };
 
         // Recursively intern.
-        self.visit(&mut value).await?;
+        Visitor::<&mut T>::visit(self, &mut value).await?;
+        // self.visit(&mut value).await?;
 
         // Intern value
         let value = Rc::new(value);
