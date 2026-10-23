@@ -1,3 +1,5 @@
+# Check https://github.com/EmbarkStudios/cargo-deny/pull/611 for defaults
+# Lots
 [advisories]
 # Deprecated keys for some reason: `vulnerability`, `unmaintained`, `yanked`. They are all default ` = deny`.
 yanked = "deny"

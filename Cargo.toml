@@ -1,9 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["codegen/*", "apis/*"]
-# members = ["codegen/*", ]
 package.edition = "2024"
 package.version = "0.1.0"
-
+package.license = "MIT OR Apache-2.0"
 [workspace.metadata.codegen]
 common-lib = "apis/hmrc-common"

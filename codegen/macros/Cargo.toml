@@ -2,6 +2,7 @@
 name = "taxman-macros"
 edition.workspace = true
 version.workspace = true
+license.workspace = true
 
 [lib]
 proc-macro = true
