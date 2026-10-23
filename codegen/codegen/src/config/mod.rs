@@ -145,16 +145,12 @@ impl WorkspaceConfig {
             })?;
 
         let codegen = metadata.codegen;
-        // TODO: check if serde play nicely with errors
-        // .ok_or_else(|| ConfigError::MissingCodegenMetadata {
-        //     path: manifest_path.clone(),
-        // })?;
 
         let common_relative = codegen.common;
         // .ok_or_else(|| ConfigError::MissingCommon {
         //     path: manifest_path.clone(),
         // })?;
-        let common = Config::read_crate(&root.join(common_relative))?;
+        let common = Config::read_crate(root.join(common_relative))?;
 
         if codegen.apis.is_empty() {
             return Err(ConfigError::MissingApis {
@@ -164,7 +160,7 @@ impl WorkspaceConfig {
 
         let mut apis: BTreeMap<String, Config<metadata::Api>> = BTreeMap::new();
         for api_relative in codegen.apis {
-            let api = Config::read_crate(&root.join(api_relative))?;
+            let api = Config::read_crate(root.join(api_relative))?;
 
             // Catch duplicates
             if let Some(existing) = apis.get(&api.name) {
@@ -188,7 +184,7 @@ impl<T: DeserializeOwned> Config<T> {
 
         let manifest: Manifest<WithMetadata<T>> = load_manifest(&manifest_path)?;
 
-        // TODO: check if serde error is more useful.
+        // Cargo probably wouldn't even allow this anyways...
         let package = manifest
             .package
             .ok_or_else(|| ConfigError::MissingPackage {
