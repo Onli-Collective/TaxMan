@@ -17,6 +17,10 @@ codegen = [
 macros = ["dep:taxman-macros"]
 default = ["macros"]
 
+[[bin]]
+name = "taxman"
+required-features = ["codegen"]
+
 [dependencies]
 taxman-macros = { path = "../macros", optional = true }
 proc-macro2 = { version = "1.0.107", optional = true }
