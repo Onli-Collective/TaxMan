@@ -13,6 +13,8 @@ codegen = [
     "dep:openapi",
     "dep:thiserror",
     "dep:tokio",
+    "dep:serde",
+    "dep:cargo_toml",
 ]
 macros = ["dep:taxman-macros"]
 default = ["macros"]
