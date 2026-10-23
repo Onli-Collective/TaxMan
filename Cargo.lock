@@ -712,7 +712,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 [[package]]
 name = "openapi"
 version = "3.0.3"
-source = "git+https://github.com/Onli-Collective/OpenAPI.git#79efbde2c7301749423645f1601ae88123dc524b"
+source = "git+https://github.com/Onli-Collective/OpenAPI.git#53bf1b3911ac428bbc4e71f428706409b658c12f"
 dependencies = [
  "indexmap",
  "nom",
