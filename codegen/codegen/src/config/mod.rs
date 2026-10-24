@@ -144,22 +144,16 @@ impl WorkspaceConfig {
                 path: manifest_path.clone(),
             })?;
 
-        let codegen = metadata.codegen;
+        let common = Config::read_crate(root.join(metadata.codegen.common))?;
 
-        let common_relative = codegen.common;
-        // .ok_or_else(|| ConfigError::MissingCommon {
-        //     path: manifest_path.clone(),
-        // })?;
-        let common = Config::read_crate(root.join(common_relative))?;
-
-        if codegen.apis.is_empty() {
+        if metadata.codegen.apis.is_empty() {
             return Err(ConfigError::MissingApis {
                 path: manifest_path,
             });
         }
 
         let mut apis: BTreeMap<String, Config<metadata::Api>> = BTreeMap::new();
-        for api_relative in codegen.apis {
+        for api_relative in metadata.codegen.apis {
             let api = Config::read_crate(root.join(api_relative))?;
 
             // Catch duplicates
@@ -230,17 +224,4 @@ fn load_manifest<M: DeserializeOwned>(path: &Path) -> Result<Manifest<M>, Config
         path: path.to_path_buf(),
         source,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::config::WorkspaceConfig;
-
-    #[test]
-    fn a() {
-        let current_dir = std::env::current_dir().unwrap();
-        println!("{}", current_dir.display());
-        let config = WorkspaceConfig::read_workspace(current_dir);
-        println!("{config:?}")
-    }
 }
