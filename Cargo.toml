@@ -4,5 +4,7 @@ members = ["codegen/*", "apis/*"]
 package.edition = "2024"
 package.version = "0.1.0"
 package.license = "MIT OR Apache-2.0"
+
 [workspace.metadata.codegen]
-common-lib = "apis/hmrc-common"
+"$common" = "apis/common"
+apis = ["apis/business-details"]
