@@ -13,7 +13,6 @@ codegen = [
     "dep:openapi",
     "dep:thiserror",
     "dep:tokio",
-    "dep:serde",
     "dep:cargo_toml",
 ]
 macros = ["dep:taxman-macros"]
@@ -32,5 +31,5 @@ syn = { version = "3.0.5", features = ["full"], optional = true }
 openapi = { git = "https://github.com/Onli-Collective/OpenAPI.git", optional = true }
 thiserror = { version = "2.0.20", optional = true }
 tokio = { version = "1.53.3", features = ["macros"], optional = true }
-serde = { version = "1.0.229", features = ["derive"], optional = true }
+serde = { version = "1.0.229", features = ["derive"]}
 cargo_toml = { version = "1.0.1", optional = true }

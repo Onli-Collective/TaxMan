@@ -1,77 +1,31 @@
-#![allow(non_camel_case_types, unused)]
-pub struct ListAllBusinesses;
+// TODO: Suggest a .vscode/settings.json for the API repository which runs cargo check && taxman --check
+// TODO: For these purposes, the result of stage 1 (gathering) should be cached in $TARGET,
+//       with some configurable TTL (default, like 1 hour).
+// TODO: Question marks should use the Help/Info type of message.
 
-impl hmrc::Api for ListAllBusinesses {
-    const SERVERS: &[hmrc::Server] = &[
-        hmrc::Server {
-            url: "https://test-api.service.hmrc.gov.uk",
-            name: "Sandbox",
-        },
-        hmrc::Server {
-            url: "https://api.service.hmrc.gov.uk",
-            name: "Production",
-        },
-    ];
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct Money {}
+
+pub fn is_default<T: PartialEq + Default>(value: &T) -> bool {
+    value == &T::default()
 }
 
-pub struct Individuals_Business_Details_Nino_List;
-pub struct Params_Individuals_Business_Details_Nino_List {
-    nino: Nino,
-}
-
-impl hmrc::Endpoint for Individuals_Business_Details_Nino_List {
-    type Api = ListAllBusinesses;
-    type Params = Params_Individuals_Business_Details_Nino_List;
-
-    fn url(Self::Params { nino }: &Self::Params) -> String {
-        format!("/individuals/business/details/{nino}/list")
+taxman::patches! {
+    #[append(
+        derive(Clone, Debug),
+        doc = "Happy Hour!"
+    )]
+    schema at VatRegistration as Y {
+        "original-field" as rust_field,
+        amount: Money,
+        #[prepend(
+            doc = "Rate as a percentage.",
+        )]
+        #[replace(serde(default, skip_serializing_if = "is_default"))]
+        rate as ?: std::collections::HashSet<_>,
+        legacy: ?,
+        "enum" as enumeration: _?,
     }
-}
 
-pub struct ListAllBusinesses200Response {
-    /// An array containing the details of all the business income sources held against the specified National insurance number.
-    pub list_of_businesses: Vec<ListAllBusinesses200Response_ListOfBusinesses>,
-}
-
-#[allow(nonstandard_style)]
-pub struct ListAllBusinesses200Response_ListOfBusinesses {
-    pub business_id: BusinessId,
-    pub type_of_business: TypeOfBusiness,
-    pub trading_name: Option<TradingName>,
-    pub trading_type: Option<TradingType>,
-}
-
-pub struct TradingName(String);
-pub struct TradingType(String);
-
-pub struct BusinessId(String);
-
-pub enum TypeOfBusiness {
-    SelfEmployment,
-    UkProperty,
-    ForeignProperty,
-    PropertyUnspecified,
-}
-
-// 400 | 403 | 404
-pub struct ErrorResponse {
-    pub code: String, // <-
-    pub message: Option<String>,
-}
-
-// #[overrides(path = "ListAllBusinesses.params.nino")]
-pub struct Nino(String);
-
-// All path parameters must implement std::fmt::Display
-
-impl std::fmt::Display for Nino {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(&self.0, f)
-    }
-}
-
-pub async fn list_all_businesses(
-    nino: Nino,
-) -> Result<ListAllBusinesses200Response, ErrorResponse> {
-    todo!()
+    operation A {}
 }

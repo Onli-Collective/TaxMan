@@ -1,33 +1,22 @@
 mod matching;
+mod patches;
 
 use quote::quote;
 
-#[proc_macro_attribute]
-pub fn overrides(
-    attrs: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let attr = proc_macro2::TokenStream::from(attrs);
-    let item = proc_macro2::TokenStream::from(item);
+#[proc_macro]
+pub fn patches(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let patches::Patches(mut items) = syn::parse_macro_input!(tokens);
 
-    let ident = match syn::parse2::<syn::Ident>(attr) {
-        Ok(ident) => quote! {#ident},
-        Err(_) => quote! { self },
-    };
-
-    let hook = quote! {
-        #[cfg(rust_analyzer)]
-        #[allow(unexpected_cfgs)]
-        #[doc(hidden)]
-        const _: () = {
-            #[allow(unused_imports)]
-            use taxman::__::predicates::{#ident};
-        };
-    };
+    let question = patches::ide::question(&mut items);
+    let keywords = patches::ide::keywords(&mut items);
+    let verbs = patches::ide::verbs(&mut items);
+    let schemas = patches::ide::schema(&mut items);
 
     quote! {
-        #item
-        #hook
+        #question
+        #keywords
+        #verbs
+        #(#schemas)*
     }
     .into()
 }
