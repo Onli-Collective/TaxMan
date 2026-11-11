@@ -570,7 +570,7 @@ impl<'a> Visitor<&'a mut openapi::Schema> for Cache {
                 self, properties,
             )
             .await?;
-            Visitor::<&mut openapi::Either<bool, openapi::ReferenceOr<Box<openapi::Schema>>>>::visit(self, additional_properties).await?;
+            Visitor::<&mut Option<openapi::Either<bool, openapi::ReferenceOr<Box<openapi::Schema>>>>>::visit(self, additional_properties).await?;
             Visitor::<&mut Option<serde_json::Value>>::visit(self, default).await?;
             Visitor::<&mut Option<serde_json::Value>>::visit(self, example).await?;
 
